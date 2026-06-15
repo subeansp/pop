@@ -1,38 +1,29 @@
 const app = document.getElementById("app");
 
-// 最寄り駅設定
-const userSettings = {
-  homeStation: "高槻駅",
-  campusStation: "JR茨木駅",
+let userSettings = {
+  homeStation: localStorage.getItem("homeStation") || "高槻駅",
+  campusStation: localStorage.getItem("campusStation") || "JR茨木駅",
 };
 
 // 仮データ
 const trainData = {
   toHome: [
     {
-      from: "JR茨木駅",
-      to: "高槻駅",
       depart: "17:12",
       arrive: "17:20",
       line: "JR京都線",
     },
     {
-      from: "JR茨木駅",
-      to: "高槻駅",
       depart: "17:18",
       arrive: "17:26",
       line: "JR京都線",
     },
     {
-      from: "JR茨木駅",
-      to: "高槻駅",
       depart: "17:27",
       arrive: "17:35",
       line: "JR京都線",
     },
     {
-      from: "JR茨木駅",
-      to: "高槻駅",
       depart: "17:34",
       arrive: "17:42",
       line: "JR京都線",
@@ -40,35 +31,90 @@ const trainData = {
   ],
   toCampus: [
     {
-      from: "高槻駅",
-      to: "JR茨木駅",
       depart: "08:10",
       arrive: "08:18",
       line: "JR京都線",
     },
     {
-      from: "高槻駅",
-      to: "JR茨木駅",
       depart: "08:17",
       arrive: "08:25",
       line: "JR京都線",
     },
     {
-      from: "高槻駅",
-      to: "JR茨木駅",
       depart: "08:25",
       arrive: "08:33",
       line: "JR京都線",
     },
     {
-      from: "高槻駅",
-      to: "JR茨木駅",
       depart: "08:34",
       arrive: "08:42",
       line: "JR京都線",
     },
   ],
 };
+
+const homeStationOptions = ["高槻駅", "吹田駅", "大阪駅", "京都駅"];
+const campusStationOptions = ["JR茨木駅", "阪急南茨木駅", "大阪モノレール宇野辺駅"];
+
+function showSettings() {
+  title.textContent = "駅を設定する";
+  group.className = "settings-form";
+  group.innerHTML = "";
+
+  const homeLabel = document.createElement("label");
+  homeLabel.textContent = "家の最寄駅";
+
+  const homeSelect = document.createElement("select");
+
+  homeStationOptions.forEach((station) => {
+    const option = document.createElement("option");
+    option.value = station;
+    option.textContent = station;
+
+    if (station === userSettings.homeStation) {
+      option.selected = true;
+    }
+
+    homeSelect.appendChild(option);
+  });
+
+  const campusLabel = document.createElement("label");
+  campusLabel.textContent = "大学で利用する駅";
+
+  const campusSelect = document.createElement("select");
+
+  campusStationOptions.forEach((station) => {
+    const option = document.createElement("option");
+    option.value = station;
+    option.textContent = station;
+
+    if (station === userSettings.campusStation) {
+      option.selected = true;
+    }
+
+    campusSelect.appendChild(option);
+  });
+
+  const saveBtn = document.createElement("button");
+  saveBtn.textContent = "保存する";
+  saveBtn.className = "primary";
+
+  saveBtn.onclick = () => {
+    userSettings.homeStation = homeSelect.value;
+    userSettings.campusStation = campusSelect.value;
+
+    localStorage.setItem("homeStation", userSettings.homeStation);
+    localStorage.setItem("campusStation", userSettings.campusStation);
+
+    showHome();
+  };
+
+  group.appendChild(homeLabel);
+  group.appendChild(homeSelect);
+  group.appendChild(campusLabel);
+  group.appendChild(campusSelect);
+  group.appendChild(saveBtn);
+}
 
 // メニューバー作成
 const menuBar = document.createElement("header");
@@ -98,7 +144,7 @@ homeMenuBtn.onclick = () => {
 };
 
 settingMenuBtn.onclick = () => {
-  alert("設定画面はあとで作る");
+  showSettings();
 };
 
 nav.appendChild(homeMenuBtn);
@@ -140,11 +186,18 @@ function showHome() {
 function showTrainInfo(type) {
   const trains = trainData[type];
 
+  let fromStation;
+  let toStation;
+
   if (type === "toHome") {
-    title.textContent = `${userSettings.campusStation} → ${userSettings.homeStation}`;
+    fromStation = userSettings.campusStation;
+    toStation = userSettings.homeStation;
   } else {
-    title.textContent = `${userSettings.homeStation} → ${userSettings.campusStation}`;
+    fromStation = userSettings.homeStation;
+    toStation = userSettings.campusStation;
   }
+
+  title.textContent = `${fromStation} → ${toStation}`;
 
   group.className = "train-list";
   group.innerHTML = "";
@@ -156,7 +209,7 @@ function showTrainInfo(type) {
     item.innerHTML = `
       <div class="train-line">${train.line}</div>
       <div class="train-time">
-        ${train.from} ${train.depart}発 → ${train.to} ${train.arrive}着
+        ${fromStation} ${train.depart}発 → ${toStation} ${train.arrive}着
       </div>
     `;
 
