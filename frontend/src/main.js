@@ -1,179 +1,122 @@
+/***********
+ * データ定義
+ */
 const app = document.getElementById("app");
 
-let userSettings = {
-  homeStation: localStorage.getItem("homeStation") || "高槻駅",
-  campusStation: localStorage.getItem("campusStation") || "JR茨木駅",
-};
+function loadStation(key, defaultStation) {
+  const savedStation = localStorage.getItem(key);
 
-// 仮データ
-const trainData = {
-  toHome: [
-    {
-      depart: "17:12",
-      arrive: "17:20",
-      line: "JR京都線",
-    },
-    {
-      depart: "17:18",
-      arrive: "17:26",
-      line: "JR京都線",
-    },
-    {
-      depart: "17:27",
-      arrive: "17:35",
-      line: "JR京都線",
-    },
-    {
-      depart: "17:34",
-      arrive: "17:42",
-      line: "JR京都線",
-    },
-  ],
-  toCampus: [
-    {
-      depart: "08:10",
-      arrive: "08:18",
-      line: "JR京都線",
-    },
-    {
-      depart: "08:17",
-      arrive: "08:25",
-      line: "JR京都線",
-    },
-    {
-      depart: "08:25",
-      arrive: "08:33",
-      line: "JR京都線",
-    },
-    {
-      depart: "08:34",
-      arrive: "08:42",
-      line: "JR京都線",
-    },
-  ],
-};
+  if (!savedStation) {
+    return defaultStation;
+  }
 
-const homeStationOptions = ["高槻駅", "吹田駅", "大阪駅", "京都駅"];
-const campusStationOptions = ["JR茨木駅", "阪急南茨木駅", "大阪モノレール宇野辺駅"];
-
-function showSettings() {
-  title.textContent = "駅を設定する";
-  group.className = "settings-form";
-  group.innerHTML = "";
-
-  const homeLabel = document.createElement("label");
-  homeLabel.textContent = "家の最寄駅";
-
-  const homeSelect = document.createElement("select");
-
-  homeStationOptions.forEach((station) => {
-    const option = document.createElement("option");
-    option.value = station;
-    option.textContent = station;
-
-    if (station === userSettings.homeStation) {
-      option.selected = true;
-    }
-
-    homeSelect.appendChild(option);
-  });
-
-  const campusLabel = document.createElement("label");
-  campusLabel.textContent = "大学で利用する駅";
-
-  const campusSelect = document.createElement("select");
-
-  campusStationOptions.forEach((station) => {
-    const option = document.createElement("option");
-    option.value = station;
-    option.textContent = station;
-
-    if (station === userSettings.campusStation) {
-      option.selected = true;
-    }
-
-    campusSelect.appendChild(option);
-  });
-
-  const saveBtn = document.createElement("button");
-  saveBtn.textContent = "保存する";
-  saveBtn.className = "primary";
-
-  saveBtn.onclick = () => {
-    userSettings.homeStation = homeSelect.value;
-    userSettings.campusStation = campusSelect.value;
-
-    localStorage.setItem("homeStation", userSettings.homeStation);
-    localStorage.setItem("campusStation", userSettings.campusStation);
-
-    showHome();
-  };
-
-  group.appendChild(homeLabel);
-  group.appendChild(homeSelect);
-  group.appendChild(campusLabel);
-  group.appendChild(campusSelect);
-  group.appendChild(saveBtn);
+  try {
+    return JSON.parse(savedStation);
+  } catch {
+    return {
+      id: savedStation,
+      name: savedStation,
+    };
+  }
 }
 
-// メニューバー作成
+//ユーザーが設定する部分
+let userSettings = {
+  homeStation: loadStation("homeStation", null),
+  campusStation: loadStation("campusStation", {
+    id:"00000494",
+    name: "茨木〔ＪＲ〕"
+  }),
+};
+
+//大学の最寄り駅メニュー
+const campusStationOptions = [
+  { id: "00000494", name: "茨木〔ＪＲ〕" },
+  { id: "00000495", name: "茨木市〔阪急線〕" },
+  { id: "00007041", name: "南茨木〔阪急線〕" },
+  { id: "00007042", name: "南茨木（大阪モノレール）" },
+  { id: "", name: "宇野辺（大阪モノレール）" }
+];
+
+// 家の最寄り駅をキーワード検索する
+async function searchHomeStations(keyword) {
+  if (!keyword.trim()) {
+    return [];
+  }
+
+  const response = await fetch(
+    `/api/stations/search?keyword=${encodeURIComponent(keyword)}`
+  );
+
+  if (!response.ok) {
+    throw new Error("駅検索に失敗しました");
+  }
+
+  return await response.json();
+}
+
+// 運行情報を取得する
+async function fetchTrainInfo(fromStation, toStation) {
+  const response = await fetch("/api/trains", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    //jsonへの変換、送信
+    body: JSON.stringify({
+      fromStation,
+      toStation,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error("運行情報の取得に失敗しました");
+  }
+
+  return await response.json();
+}
+
 const menuBar = document.createElement("header");
+const appName = document.createElement("div");
+const nav = document.createElement("nav");
+const homeMenuBtn = document.createElement("button");
+const settingMenuBtn = document.createElement("button");
+
+const card = document.createElement("div");
+const title = document.createElement("h1"); //タイトル
+const group = document.createElement("div");
+
+const homeBtn = document.createElement("button");
+const uniBtn = document.createElement("button");
+
+/*************
+ * 表示オブジェクト設定
+ */
 menuBar.className = "menu-bar";
 
-const appName = document.createElement("div");
 appName.className = "app-name";
 appName.textContent = "OIC Transit";
 
-appName.onclick = () => {
-  showHome();
-};
-
-const nav = document.createElement("nav");
 nav.className = "nav-menu";
 
-const homeMenuBtn = document.createElement("button");
 homeMenuBtn.className = "menu-btn";
 homeMenuBtn.textContent = "ホーム";
 
-const settingMenuBtn = document.createElement("button");
 settingMenuBtn.className = "menu-btn";
 settingMenuBtn.textContent = "設定";
 
-homeMenuBtn.onclick = () => {
-  showHome();
-};
-
-settingMenuBtn.onclick = () => {
-  showSettings();
-};
-
-nav.appendChild(homeMenuBtn);
-nav.appendChild(settingMenuBtn);
-
-menuBar.appendChild(appName);
-menuBar.appendChild(nav);
-
-app.appendChild(menuBar);
-
-// カード作成
-const card = document.createElement("div");
 card.className = "card";
-
-// タイトル
-const title = document.createElement("h1");
-
-// ボタン・内容の箱
-const group = document.createElement("div");
 group.className = "button-group";
-
-// ボタン① 家
-const homeBtn = document.createElement("button");
 homeBtn.textContent = "家に帰る";
-
-// ボタン② 大学
-const uniBtn = document.createElement("button");
 uniBtn.textContent = "大学に行く";
 
+
+
+/*******
+ * 画面表示
+ */
+
+//初期画面実装
 function showHome() {
   title.textContent = "今からDoする？";
   group.className = "button-group";
@@ -183,8 +126,13 @@ function showHome() {
   group.appendChild(uniBtn);
 }
 
-function showTrainInfo(type) {
-  const trains = trainData[type];
+// 電車表示画面
+async function showTrainInfo(type) {
+  if (!userSettings.homeStation) {
+    alert("最寄駅を設定してください");
+    showSettings();
+    return;
+  }
 
   let fromStation;
   let toStation;
@@ -197,24 +145,32 @@ function showTrainInfo(type) {
     toStation = userSettings.campusStation;
   }
 
-  title.textContent = `${fromStation} → ${toStation}`;
-
+  title.textContent = `${fromStation.name} → ${toStation.name}`;
   group.className = "train-list";
-  group.innerHTML = "";
+  group.innerHTML = "読み込み中...";
 
-  trains.forEach((train) => {
-    const item = document.createElement("div");
-    item.className = "train-item";
+  try {
+    const result = await fetchTrainInfo(fromStation, toStation);
+    const trains = result.trains || result.routes || [];
 
-    item.innerHTML = `
-      <div class="train-line">${train.line}</div>
-      <div class="train-time">
-        ${fromStation} ${train.depart}発 → ${toStation} ${train.arrive}着
-      </div>
-    `;
+    group.innerHTML = "";
 
-    group.appendChild(item);
-  });
+    trains.forEach((train) => {
+      const item = document.createElement("div");
+      item.className = "train-item";
+
+      item.innerHTML = `
+        <div class="train-line">${train.line}</div>
+        <div class="train-time">
+          ${fromStation.name} ${train.depart}発 → ${toStation.name} ${train.arrive}着
+        </div>
+      `;
+
+      group.appendChild(item);
+    });
+  } catch (error) {
+    group.innerHTML = "運行情報を取得できませんでした";
+  }
 
   const backBtn = document.createElement("button");
   backBtn.textContent = "戻る";
@@ -223,6 +179,120 @@ function showTrainInfo(type) {
   group.appendChild(backBtn);
 }
 
+// 設定ページ
+function showSettings() {
+  title.textContent = "駅を設定する";
+  group.className = "settings-form";
+  group.innerHTML = "";
+
+  let selectedHomeStation = userSettings.homeStation;
+  let selectedCampusStation = userSettings.campusStation;
+
+  const homeLabel = document.createElement("label");
+  homeLabel.textContent = "家の最寄駅";
+
+  const homeInput = document.createElement("input");
+  homeInput.type = "text";
+  homeInput.placeholder = "駅名を入力";
+  homeInput.value = selectedHomeStation ? selectedHomeStation.name : "";
+
+  const homeSelect = document.createElement("select");
+  homeSelect.innerHTML = `<option value="">候補を選択</option>`;
+
+  homeInput.oninput = async () => {
+    const keyword = homeInput.value;
+
+    homeSelect.innerHTML = `<option value="">検索中...</option>`;
+
+    try {
+      const stations = await searchHomeStations(keyword);
+
+      homeSelect.innerHTML = `<option value="">候補を選択</option>`;
+
+      stations.forEach((station, index) => {
+        const option = document.createElement("option");
+        option.value = String(index);
+        option.textContent = `${station.name}（${station.address_name}）`;
+        homeSelect.appendChild(option);
+      });
+
+      homeSelect.onchange = () => {
+        if(homeSelect.value === ""){
+          selectedHomeStation = null;
+          return;
+        }
+
+        selectedHomeStation = stations[Number(homeSelect.value)];
+      };
+    } catch (error) {
+      homeSelect.innerHTML = `<option value="">検索に失敗しました</option>`;
+    }
+  };
+
+  const campusLabel = document.createElement("label");
+  campusLabel.textContent = "大学で利用する駅";
+
+  const campusSelect = document.createElement("select");
+
+  campusStationOptions.forEach((station, index) => {
+    const option = document.createElement("option");
+    option.value = String(index);
+    option.textContent = station.name;
+
+    if (station.id === selectedCampusStation.id) {
+      option.selected = true;
+    }
+
+    campusSelect.appendChild(option);
+  });
+
+  campusSelect.onchange = () => {
+    selectedCampusStation = campusStationOptions[Number(campusSelect.value)];
+  };
+
+  const saveBtn = document.createElement("button");
+  saveBtn.textContent = "保存する";
+  saveBtn.className = "primary";
+
+  saveBtn.onclick = () => {
+    if (!selectedHomeStation) {
+      alert("家の最寄駅を選択してください");
+      return;
+    }
+
+    userSettings.homeStation = selectedHomeStation;
+    userSettings.campusStation = selectedCampusStation;
+
+    localStorage.setItem("homeStation", JSON.stringify(userSettings.homeStation));
+    localStorage.setItem("campusStation", JSON.stringify(userSettings.campusStation));
+
+    showHome();
+  };
+
+  group.appendChild(homeLabel);
+  group.appendChild(homeInput);
+  group.appendChild(homeSelect);
+  group.appendChild(campusLabel);
+  group.appendChild(campusSelect);
+  group.appendChild(saveBtn);
+}
+
+/************
+ * イベント登録
+ */
+
+appName.onclick = () => {
+  showHome();
+};
+
+homeMenuBtn.onclick = () => {
+  showHome();
+};
+
+settingMenuBtn.onclick = () => {
+  showSettings();
+};
+
 homeBtn.onclick = () => {
   showTrainInfo("toHome");
 };
@@ -230,6 +300,14 @@ homeBtn.onclick = () => {
 uniBtn.onclick = () => {
   showTrainInfo("toCampus");
 };
+
+nav.appendChild(homeMenuBtn);
+nav.appendChild(settingMenuBtn);
+
+menuBar.appendChild(appName);
+menuBar.appendChild(nav);
+
+app.appendChild(menuBar);
 
 card.appendChild(title);
 card.appendChild(group);
