@@ -111,8 +111,8 @@ homeMenuBtn.textContent = "ホーム";
 settingMenuBtn.className = "menu-btn";
 settingMenuBtn.textContent = "設定";
 
-card.className = "card home-card";
-group.className = "button-group home-buttons";
+card.className = "card";
+group.className = "button-group";
 homeBtn.textContent = "家に帰る";
 uniBtn.textContent = "大学に行く";
 
