@@ -89,6 +89,12 @@ const group = document.createElement("div");
 const homeBtn = document.createElement("button");
 const uniBtn = document.createElement("button");
 
+//扇形メニューバー
+const floatingMenu = document.createElement("div");
+const floatingMainBtn = document.createElement("button");
+const floatingHomeBtn = document.createElement("button");
+const floatingLinksBtn = document.createElement("button");
+const floatingSettingBtn = document.createElement("button");
 /*************
  * 表示オブジェクト設定
  */
@@ -105,20 +111,31 @@ homeMenuBtn.textContent = "ホーム";
 settingMenuBtn.className = "menu-btn";
 settingMenuBtn.textContent = "設定";
 
-card.className = "card";
-group.className = "button-group";
+card.className = "card home-card";
+group.className = "button-group home-buttons";
 homeBtn.textContent = "家に帰る";
 uniBtn.textContent = "大学に行く";
 
-
-
+//追加メニューバー
+floatingMenu.className = "floating-menu";
+floatingMainBtn.className = "floating-main-btn";
+floatingMainBtn.textContent = "＋";
+floatingHomeBtn.className = "floating-item floating-home";
+floatingHomeBtn.textContent = "⌂";
+floatingHomeBtn.title = "ホーム";
+floatingLinksBtn.className = "floating-item floating-links";
+floatingLinksBtn.textContent = "↗";
+floatingLinksBtn.title = "大学リンク";
+floatingSettingBtn.className = "floating-item floating-setting";
+floatingSettingBtn.textContent = "⚙"
+floatingSettingBtn.title = "設定";
 /*******
  * 画面表示
  */
 
 //初期画面実装
 function showHome() {
-  title.textContent = "今からDoする？";
+  title.textContent = "今からどうする？";
   group.className = "button-group";
   group.innerHTML = "";
 
@@ -277,6 +294,48 @@ function showSettings() {
   group.appendChild(saveBtn);
 }
 
+function showUniversityLinks() {
+  title.textContent = "大学リンク";
+  group.className = "link-list";
+  group.innerHTML = "";
+
+  const links = [
+    {
+      label: "moodle+R",
+      url: "https://lms.ritsumei.ac.jp/",
+    },
+    {
+      label: "CAMPUS WEB",
+      url: "https://campusweb.ritsumei.ac.jp/",
+    },
+    {
+      label: "立命館大学",
+      url: "https://www.ritsumei.ac.jp/",
+    },
+    {
+      label: "OICライブラリー",
+      url: "https://www.ritsumei.ac.jp/lib/",
+    },
+  ];
+
+  links.forEach((link) => {
+    const anchor = document.createElement("a");
+    anchor.className = "university-link";
+    anchor.textContent = link.label;
+    anchor.href = link.url;
+    anchor.target = "_blank";
+    anchor.rel = "noopener noreferrer";
+
+    group.appendChild(anchor);
+  });
+
+  const backBtn = document.createElement("button");
+  backBtn.textContent = "戻る";
+  backBtn.onclick = showHome;
+
+  group.appendChild(backBtn);
+}
+
 /************
  * イベント登録
  */
@@ -301,6 +360,25 @@ uniBtn.onclick = () => {
   showTrainInfo("toCampus");
 };
 
+floatingMainBtn.onclick = () => {
+  floatingMenu.classList.toggle("open");
+};
+
+floatingHomeBtn.onclick = () => {
+  showHome();
+  floatingMenu.classList.remove("open");
+};
+
+floatingSettingBtn.onclick = () => {
+  showSettings();
+  floatingMenu.classList.remove("open");
+};
+
+floatingLinksBtn.onclick = () => {
+  showUniversityLinks();
+  floatingMenu.classList.remove("open");
+};
+
 nav.appendChild(homeMenuBtn);
 nav.appendChild(settingMenuBtn);
 
@@ -312,5 +390,12 @@ app.appendChild(menuBar);
 card.appendChild(title);
 card.appendChild(group);
 app.appendChild(card);
+
+floatingMenu.appendChild(floatingHomeBtn);
+floatingMenu.appendChild(floatingSettingBtn);
+floatingMenu.appendChild(floatingLinksBtn);
+floatingMenu.appendChild(floatingMainBtn);
+
+app.appendChild(floatingMenu);
 
 showHome();
