@@ -27,6 +27,7 @@ let userSettings = {
     id:"00000494",
     name: "茨木〔ＪＲ〕"
   }),
+
 };
 
 //大学の最寄り駅メニュー
@@ -119,7 +120,7 @@ uniBtn.textContent = "大学に行く";
 //追加メニューバー
 floatingMenu.className = "floating-menu";
 floatingMainBtn.className = "floating-main-btn";
-floatingMainBtn.textContent = "＋";
+floatingMainBtn.textContent = "+";
 floatingHomeBtn.className = "floating-item floating-home";
 floatingHomeBtn.textContent = "⌂";
 floatingHomeBtn.title = "ホーム";
@@ -127,7 +128,7 @@ floatingLinksBtn.className = "floating-item floating-links";
 floatingLinksBtn.textContent = "↗";
 floatingLinksBtn.title = "大学リンク";
 floatingSettingBtn.className = "floating-item floating-setting";
-floatingSettingBtn.textContent = "⚙"
+floatingSettingBtn.textContent = "⚙";
 floatingSettingBtn.title = "設定";
 /*******
  * 画面表示
@@ -135,8 +136,10 @@ floatingSettingBtn.title = "設定";
 
 //初期画面実装
 function showHome() {
+  setActiveMenu("home");
+
   title.textContent = "今からどうする？";
-  group.className = "button-group";
+  group.className = "button-group home-buttons";
   group.innerHTML = "";
 
   group.appendChild(homeBtn);
@@ -145,6 +148,8 @@ function showHome() {
 
 // 電車表示画面
 async function showTrainInfo(type) {
+  setActiveMenu(null);
+
   if (!userSettings.homeStation) {
     alert("最寄駅を設定してください");
     showSettings();
@@ -198,6 +203,8 @@ async function showTrainInfo(type) {
 
 // 設定ページ
 function showSettings() {
+  setActiveMenu("settings");
+
   title.textContent = "駅を設定する";
   group.className = "settings-form";
   group.innerHTML = "";
@@ -295,6 +302,8 @@ function showSettings() {
 }
 
 function showUniversityLinks() {
+  setActiveMenu(null);
+
   title.textContent = "大学リンク";
   group.className = "link-list";
   group.innerHTML = "";
@@ -334,6 +343,20 @@ function showUniversityLinks() {
   backBtn.onclick = showHome;
 
   group.appendChild(backBtn);
+}
+
+//current page
+function setActiveMenu(activePage) {
+  homeMenuBtn.classList.remove("active");
+  settingMenuBtn.classList.remove("active");
+
+  if (activePage === "home") {
+    homeMenuBtn.classList.add("active");
+  }
+
+  if (activePage === "settings") {
+    settingMenuBtn.classList.add("active");
+  }
 }
 
 /************
@@ -378,6 +401,40 @@ floatingLinksBtn.onclick = () => {
   showUniversityLinks();
   floatingMenu.classList.remove("open");
 };
+
+//画面右下プラスマークを閉じるための
+floatingMainBtn.onclick = (event) => {
+  event.stopPropagation();
+  floatingMenu.classList.toggle("open");
+};
+
+floatingHomeBtn.onclick = (event) => {
+  event.stopPropagation();
+  showHome();
+  floatingMenu.classList.remove("open");
+};
+
+floatingSettingBtn.onclick = (event) => {
+  event.stopPropagation();
+  showSettings();
+  floatingMenu.classList.remove("open");
+};
+
+floatingLinksBtn.onclick = (event) => {
+  event.stopPropagation();
+  showUniversityLinks();
+  floatingMenu.classList.remove("open");
+};
+
+document.addEventListener("click", (event) => {
+  const clickedInsideFloatingMenu = floatingMenu.contains(event.target);
+
+  if (!clickedInsideFloatingMenu) {
+    floatingMenu.classList.remove("open");
+  }
+});
+
+
 
 nav.appendChild(homeMenuBtn);
 nav.appendChild(settingMenuBtn);
