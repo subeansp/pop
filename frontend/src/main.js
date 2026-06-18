@@ -2,6 +2,7 @@
  * データ定義
  */
 const app = document.getElementById("app");
+const API_BASE_URL = "http://192.168.1.247:3000";
 
 function loadStation(key, defaultStation) {
   const savedStation = localStorage.getItem(key);
@@ -46,7 +47,7 @@ async function searchHomeStations(keyword) {
   }
 
   const response = await fetch(
-    `/api/stations/search?keyword=${encodeURIComponent(keyword)}`
+    `${API_BASE_URL}/api/stations/search?keyword=${encodeURIComponent(keyword)}`
   );
 
   if (!response.ok) {
@@ -58,12 +59,11 @@ async function searchHomeStations(keyword) {
 
 // 運行情報を取得する
 async function fetchTrainInfo(fromStation, toStation) {
-  const response = await fetch("/api/trains", {
+  const response = await fetch(`${API_BASE_URL}/api/trains`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    //jsonへの変換、送信
     body: JSON.stringify({
       fromStation,
       toStation,
@@ -181,6 +181,7 @@ async function showTrainInfo(type) {
       const item = document.createElement("div");
       item.className = "train-item";
 
+      //出発到着時間取得
       item.innerHTML = `
         <div class="train-line">${train.line}</div>
         <div class="train-time">
@@ -202,6 +203,7 @@ async function showTrainInfo(type) {
 }
 
 // 設定ページ
+let searchTimer = null;
 function showSettings() {
   setActiveMenu("settings");
 
@@ -221,27 +223,35 @@ function showSettings() {
   homeInput.value = selectedHomeStation ? selectedHomeStation.name : "";
 
   const homeSelect = document.createElement("select");
-  homeSelect.innerHTML = `<option value="">候補を選択</option>`;
+  homeSelect.innerHTML = `<option value="">未検索</option>`;
 
-  homeInput.oninput = async () => {
-    const keyword = homeInput.value;
+  homeInput.oninput = () => {
+  clearTimeout(searchTimer);
+
+  searchTimer = setTimeout(async () => {
+    const keyword = homeInput.value.trim();
+
+    if (!keyword) {
+      homeSelect.innerHTML = `<option value="">未検索</option>`;
+      return;
+    }
 
     homeSelect.innerHTML = `<option value="">検索中...</option>`;
 
     try {
       const stations = await searchHomeStations(keyword);
 
-      homeSelect.innerHTML = `<option value="">候補を選択</option>`;
+      homeSelect.innerHTML = `<option value="">${stations.length}件見つかりました</option>`;
 
       stations.forEach((station, index) => {
         const option = document.createElement("option");
         option.value = String(index);
-        option.textContent = `${station.name}（${station.address_name}）`;
+        option.textContent = station.name;
         homeSelect.appendChild(option);
       });
 
       homeSelect.onchange = () => {
-        if(homeSelect.value === ""){
+        if (homeSelect.value === "") {
           selectedHomeStation = null;
           return;
         }
@@ -249,9 +259,11 @@ function showSettings() {
         selectedHomeStation = stations[Number(homeSelect.value)];
       };
     } catch (error) {
+      console.error(error);
       homeSelect.innerHTML = `<option value="">検索に失敗しました</option>`;
     }
-  };
+  }, 500);
+};
 
   const campusLabel = document.createElement("label");
   campusLabel.textContent = "大学で利用する駅";
@@ -312,6 +324,10 @@ function showUniversityLinks() {
     {
       label: "moodle+R",
       url: "https://lms.ritsumei.ac.jp/",
+    },
+    {
+      label:"STUDENT POTAL",
+      url: "https://sp.ritsumei.ac.jp/studentportal/s/"
     },
     {
       label: "CAMPUS WEB",
