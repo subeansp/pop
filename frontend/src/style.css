@@ -219,17 +219,23 @@ button:hover {
 /* フローティングメニュー */
 .floating-menu {
   position: fixed;
-  right: 24px;
   bottom: 40px;
   width: 64px;
   height: 64px;
   z-index: 20;
 }
 
+.right-floating-menu {
+  right: 24px;
+}
+
+.left-floating-menu {
+  left: 24px;
+}
+
 .floating-main-btn,
 .floating-item {
   position: absolute;
-  right: 0;
   bottom: 0;
   width: 56px;
   height: 56px;
@@ -239,6 +245,16 @@ button:hover {
   color: #fff;
   font-weight: 700;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
+}
+
+.right-floating-menu .floating-main-btn,
+.right-floating-menu .floating-item {
+  right: 0;
+}
+
+.left-floating-menu .floating-main-btn,
+.left-floating-menu .floating-item {
+  left: 0;
 }
 
 .floating-main-btn {
@@ -254,10 +270,6 @@ button:hover {
   padding: 0;
 }
 
-.floating-menu.open .floating-main-btn {
-  transform: none;
-}
-
 .floating-item {
   z-index: 1;
   opacity: 0;
@@ -267,19 +279,39 @@ button:hover {
   transition: 0.22s ease;
 }
 
-.floating-menu.open .floating-home {
+/* 右下: 左上に開く */
+.right-floating-menu.open .floating-home {
   opacity: 1;
   pointer-events: auto;
   transform: translate(-86px, 0) scale(1);
 }
 
-.floating-menu.open .floating-setting {
+.right-floating-menu.open .floating-setting {
   opacity: 1;
   pointer-events: auto;
   transform: translate(-66px, -66px) scale(1);
 }
 
-.floating-menu.open .floating-links {
+.right-floating-menu.open .floating-links {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(0, -86px) scale(1);
+}
+
+/* 左下: 右上に開く */
+.left-floating-menu.open .floating-home {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(86px, 0) scale(1);
+}
+
+.left-floating-menu.open .floating-setting {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(66px, -66px) scale(1);
+}
+
+.left-floating-menu.open .floating-links {
   opacity: 1;
   pointer-events: auto;
   transform: translate(0, -86px) scale(1);

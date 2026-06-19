@@ -114,11 +114,8 @@ const group = document.createElement("div");
 const homeBtn = document.createElement("button");
 const uniBtn = document.createElement("button");
 
-const floatingMenu = document.createElement("div");
-const floatingMainBtn = document.createElement("button");
-const floatingHomeBtn = document.createElement("button");
-const floatingLinksBtn = document.createElement("button");
-const floatingSettingBtn = document.createElement("button");
+const rightFloatingMenu = createFloatingMenu("right");
+const leftFloatingMenu = createFloatingMenu("left");
 
 // 基本プロパティ
 menuBar.className = "menu-bar";
@@ -134,20 +131,65 @@ group.className = "button-group";
 homeBtn.textContent = "家に帰る";
 uniBtn.textContent = "大学に行く";
 
-floatingMenu.className = "floating-menu";
-floatingMainBtn.className = "floating-main-btn";
-floatingMainBtn.textContent = "+";
-floatingHomeBtn.className = "floating-item floating-home";
-floatingHomeBtn.textContent = "⌂";
-floatingHomeBtn.title = "ホーム";
-floatingLinksBtn.className = "floating-item floating-links";
-floatingLinksBtn.textContent = "↗";
-floatingLinksBtn.title = "大学リンク";
-floatingSettingBtn.className = "floating-item floating-setting";
-floatingSettingBtn.textContent = "⚙";
-floatingSettingBtn.title = "設定";
+
 
 let searchTimer = null;
+
+function createFloatingMenu(side) {
+  const menu = document.createElement("div");
+  menu.className = `floating-menu ${side}-floating-menu`;
+
+  const mainBtn = document.createElement("button");
+  mainBtn.className = "floating-main-btn";
+  mainBtn.textContent = "+";
+
+  const homeFloatingBtn = document.createElement("button");
+  homeFloatingBtn.className = "floating-item floating-home";
+  homeFloatingBtn.textContent = "⌂";
+  homeFloatingBtn.title = "ホーム";
+
+  const settingFloatingBtn = document.createElement("button");
+  settingFloatingBtn.className = "floating-item floating-setting";
+  settingFloatingBtn.textContent = "⚙";
+  settingFloatingBtn.title = "設定";
+
+  const linksFloatingBtn = document.createElement("button");
+  linksFloatingBtn.className = "floating-item floating-links";
+  linksFloatingBtn.textContent = "↗";
+  linksFloatingBtn.title = "大学リンク";
+
+  mainBtn.addEventListener("click", (ev) => {
+    ev.stopPropagation();
+    menu.classList.toggle("open");
+  });
+
+  homeFloatingBtn.addEventListener("click", (ev) => {
+    ev.stopPropagation();
+    showHome();
+    menu.classList.remove("open");
+  });
+
+  settingFloatingBtn.addEventListener("click", (ev) => {
+    ev.stopPropagation();
+    showSettings();
+    menu.classList.remove("open");
+  });
+
+  linksFloatingBtn.addEventListener("click", (ev) => {
+    ev.stopPropagation();
+    showUniversityLinks();
+    menu.classList.remove("open");
+  });
+
+  menu.appendChild(homeFloatingBtn);
+  menu.appendChild(settingFloatingBtn);
+  menu.appendChild(linksFloatingBtn);
+  menu.appendChild(mainBtn);
+
+  app.appendChild(menu);
+
+  return menu;
+}
 
 // ホーム画面表示
 function showHome() {
@@ -358,29 +400,6 @@ settingMenuBtn.addEventListener("click", showSettings);
 homeBtn.addEventListener("click", () => showTrainInfo("toHome"));
 uniBtn.addEventListener("click", () => showTrainInfo("toCampus"));
 
-floatingMainBtn.addEventListener("click", (ev) => {
-  ev.stopPropagation();
-  floatingMenu.classList.toggle("open");
-});
-
-floatingHomeBtn.addEventListener("click", (ev) => {
-  ev.stopPropagation();
-  showHome();
-  floatingMenu.classList.remove("open");
-});
-
-floatingSettingBtn.addEventListener("click", (ev) => {
-  ev.stopPropagation();
-  showSettings();
-  floatingMenu.classList.remove("open");
-});
-
-floatingLinksBtn.addEventListener("click", (ev) => {
-  ev.stopPropagation();
-  showUniversityLinks();
-  floatingMenu.classList.remove("open");
-});
-
 // クリック外でフローティングメニューを閉じる
 document.addEventListener("click", (ev) => {
   if (!floatingMenu.contains(ev.target)) floatingMenu.classList.remove("open");
@@ -395,11 +414,15 @@ app.appendChild(menuBar);
 card.appendChild(title);
 card.appendChild(group);
 app.appendChild(card);
-floatingMenu.appendChild(floatingHomeBtn);
-floatingMenu.appendChild(floatingSettingBtn);
-floatingMenu.appendChild(floatingLinksBtn);
-floatingMenu.appendChild(floatingMainBtn);
-app.appendChild(floatingMenu);
 
+document.addEventListener("click", (ev) => {
+  if (!rightFloatingMenu.contains(ev.target)) {
+    rightFloatingMenu.classList.remove("open");
+  }
+
+  if (!leftFloatingMenu.contains(ev.target)) {
+    leftFloatingMenu.classList.remove("open");
+  }
+});
 // 初期表示
 showHome();
