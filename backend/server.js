@@ -1,31 +1,97 @@
-// 駅名から駅IDを取得するヘルパー
-const stationNames = {
-  home: "宇治",
-  univ: "茨木",
-};
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
 
-const apiUrl = "https://navitime-transport.p.rapidapi.com/transport_node";
-const apiKey = process.env.RAPIDAPI_KEY || "55cc7e59a7msh9027c9e71464916p19052cjsn5ec33c65833a";
+// 環境変数の読み込み
+dotenv.config();
 
-const requestOptions = {
-  method: "GET",
-  headers: {
-    "x-rapidapi-key": apiKey,
-    "x-rapidapi-host": "navitime-transport.p.rapidapi.com",
-    "Content-Type": "application/json",
-  },
-};
+const NAVITIME_API_KEY = process.env.NAVITIME_API_KEY;
+const app = express();
+const port = 3000;
 
-async function fetchStationId(stationName) {
-  const response = await fetch(`${apiUrl}?word=${encodeURIComponent(stationName)}`, requestOptions);
+// CORS対策
+app.use(cors());
+
+// 駅ID取得用のヘルパー関数
+async function fetchStationData(keyword) {
+  const options = {
+    method: "GET",
+    headers: {
+      "x-rapidapi-key": NAVITIME_API_KEY,
+      "x-rapidapi-host": "navitime-transport.p.rapidapi.com",
+      "Content-Type": "application/json",
+    },
+  };
+
+  const response = await fetch(
+    `https://navitime-transport.p.rapidapi.com/transport_node?word=${encodeURIComponent(keyword)}`,
+    options,
+  );
+
   const data = await response.json();
-  return data.items?.[0]?.id ?? null;
+
+  // 駅名と駅IDを含む新たな配列を返す
+  const stationData = [];
+
+  for (const d of data.items) {
+    stationData.push({
+      name: d.name,
+      id: d.id,
+    });
+  }
+
+  return stationData;
 }
 
-const homeStationId = await fetchStationId(stationNames.home);
-const univStationId = await fetchStationId(stationNames.univ);
+// 乗換案内取得用のヘルパー関数
+async function fetchTransitInfo(start, goal) {
+  const options = {
+    method: "GET",
+    headers: {
+      "x-rapidapi-key": NAVITIME_API_KEY,
+      "x-rapidapi-host": "navitime-route-totalnavi.p.rapidapi.com",
+      "Content-Type": "application/json",
+    },
+  };
 
-console.log({ homeStationId, univStationId });
+  // 現在時刻の取得とフォーマット
+  const date = new Date();
+  const currentTime = Intl.DateTimeFormat("sv-SE", {
+    timeZone: "Asia/Tokyo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  })
+    .format(date)
+    .replace(" ", "T");
 
-export { homeStationId, univStationId, stationNames };
+  const response = await fetch(
+    `https://navitime-route-totalnavi.p.rapidapi.com/route_transit?start=${encodeURIComponent(start)}&goal=${encodeURIComponent(goal)}&start_time=${encodeURIComponent(currentTime)}`,
+    options,
+  );
 
+  const data = await response.json();
+
+  return data;
+}
+
+// エンドポイント
+app.get("/fetch-station-data", async (req, res) => {
+  const stationData = await fetchStationData(req.query.keyword);
+  res.json(stationData);
+});
+
+app.get("/fetch-transit-info", async (req, res) => {
+  const start = req.query.start;
+  const goal = req.query.goal;
+  const transitData = await fetchTransitInfo(start, goal);
+  res.json(transitData);
+});
+
+app.listen(port, () => {
+  console.log(`Server started on port ${port}`);
+});
