@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://pop-psi-one.vercel.app/$1"
+    }
+  ]
+}
